@@ -1,7 +1,7 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-INSTALL_DEV_TOOLS = false
+INSTALL_DEV_TOOLS = true
 CONFIGURE_GO_EXAMPLES = true
 
 GO_SERVER_RPM = 'http://download01.thoughtworks.com/go/13.4.1/ga/go-server-13.4.1-18342.noarch.rpm'
