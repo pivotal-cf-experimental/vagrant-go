@@ -69,7 +69,7 @@ INSTALL_CHEF = <<-HERE
   make install
 
   cd /tmp
-  curl -O http://cache.ruby-lang.org/pub/ruby/2.1/ruby-2.1.1.tar.gz
+  curl -O http://cache.ruby-lang.org/pub/ruby/1.9/ruby-1.9.3-p484.tar.gz
   tar xzvf ruby-2.1.1.tar.gz
   cd ruby-2.1.1
   ./configure --prefix=/usr --enable-shared --disable-install-doc
