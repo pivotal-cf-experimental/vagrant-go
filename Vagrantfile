@@ -73,7 +73,7 @@ UPGRADE_GIT = <<-HERE
   make prefix=/usr install 
 HERE
 
-INSTALL_GOLANG = -<<HERE
+INSTALL_GOLANG = <<-HERE
   yum install -y golang
 HERE
 
