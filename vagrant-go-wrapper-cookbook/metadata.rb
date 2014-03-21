@@ -8,5 +8,4 @@ version          '0.2.3'
 supports 'centos'
 
 depends 'yum'
-depends 'git'
 depends 'python'

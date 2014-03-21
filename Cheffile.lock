@@ -13,22 +13,6 @@ SITE
     yum-epel (0.3.4)
       yum (~> 3.0)
 
-GIT
-  remote: git://github.com/fnichol/chef-git.git
-  ref: master
-  sha: 6c19cbefcdad5ec0f62a64dae1f656d660698ea3
-  specs:
-    git (0.9.0)
-      runit (>= 0.0.0)
-
-GIT
-  remote: git://github.com/ikusalic/chef-vim-setup.git
-  ref: master
-  sha: ea6b0bc6ca75e8aff29d8bd8177d2d50c64883f4
-  specs:
-    vim-setup (1.3.1)
-      git (>= 0.0.0)
-
 DEPENDENCIES
   git (>= 0)
   python (>= 0)

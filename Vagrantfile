@@ -55,11 +55,29 @@ NODES = [
   { vm_name: :agent2, hostname: 'go-agent-2', ip: '10.42.42.202', go_setup: GO_AGENT_SETUP },
   SERVER,
 ]
-
-INSTALL_CHEF = <<-HERE
+UPGRADE_GIT = <<-HERE
   set -e
   yum install -y zlib-devel openssl-devel
+  yum install -y curl-devel
 
+  yum erase -y git
+
+  yum install -y perl-ExtUtils-MakeMaker
+
+  cd /tmp
+  curl -O https://git-core.googlecode.com/files/git-1.9.0.tar.gz
+  tar xvzf git-1.9.0.tar.gz
+  cd git-1.9.0
+  ./configure
+  make prefix=/usr all
+  make prefix=/usr install 
+HERE
+
+INSTALL_GOLANG = -<<HERE
+  yum install -y golang
+HERE
+
+INSTALL_CHEF = <<-HERE
   cd /tmp
   curl -O http://pyyaml.org/download/libyaml/yaml-0.1.5.tar.gz
   tar xzvf yaml-0.1.5.tar.gz
@@ -70,12 +88,13 @@ INSTALL_CHEF = <<-HERE
 
   cd /tmp
   curl -O http://cache.ruby-lang.org/pub/ruby/1.9/ruby-1.9.3-p484.tar.gz
-  tar xzvf ruby-2.1.1.tar.gz
-  cd ruby-2.1.1
+  tar xzvf ruby-1.9.3-p484.tar.gz
+  cd ruby-1.9.3-p484
   ./configure --prefix=/usr --enable-shared --disable-install-doc
   make
   make install
 
+  gem install bundler --no-rdoc --no-ri
   gem install chef --no-rdoc --no-ri
 HERE
 
@@ -141,6 +160,7 @@ Vagrant.configure('2') do |config|
   end
 
   if INSTALL_DEV_TOOLS
+    config.vm.provision :shell, inline: UPGRADE_GIT 
     config.vm.provision :shell, inline: INSTALL_CHEF
     config.vm.provision :chef_solo do |chef|
       chef.cookbooks_path = ['.', './cookbooks']

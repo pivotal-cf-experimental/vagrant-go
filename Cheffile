@@ -4,5 +4,4 @@
 site "http://community.opscode.com/api/v1"
 
 cookbook 'yum'
-cookbook 'git', git: 'git://github.com/fnichol/chef-git.git'
 cookbook 'python'
