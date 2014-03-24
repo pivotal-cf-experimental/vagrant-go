@@ -11,16 +11,6 @@ GO_SERVER_IP = '10.42.42.101'
 GO_SERVER_URL = 'http://127.0.0.1:8153'
 
 ADJUST_SYSTEM = <<-HERE
-sysctl -w vm.overcommit_memory=1
-echo "vm.overcommit_memory = 1" >> /etc/sysctl.conf
-
-cat >> /etc/security/limits.conf <<LIMITS
-go      soft    nofile  8192
-go      hard    npofile 8192
-go      soft    nproc   8192
-go      hard    nproc   8192
-LIMITS
-
 yum install -y java-1.6.0-openjdk-devel
 export JAVA_HOME=/etc/alternatives/java_sdk_1.6.0/
 echo 'export JAVA_HOME=/etc/alternatives/java_sdk_1.6.0/' > /etc/profile.d/java.sh
@@ -51,18 +41,14 @@ HERE
 
 SERVER = { vm_name: :server, hostname: 'go-server', ip: GO_SERVER_IP, forward_port: 8153, go_setup: GO_SERVER_SETUP }
 NODES = [
-  { vm_name: :agent1, hostname: 'go-agent-1', ip: '10.42.42.201', go_setup: GO_AGENT_SETUP },
-  { vm_name: :agent2, hostname: 'go-agent-2', ip: '10.42.42.202', go_setup: GO_AGENT_SETUP },
-  SERVER,
+  { vm_name: :agent1, hostname: 'go-agent-1', go_setup: GO_AGENT_SETUP },
 ]
 UPGRADE_GIT = <<-HERE
   set -e
   yum install -y zlib-devel openssl-devel
-  yum install -y curl-devel
+  yum install -y curl-devel perl-ExtUtils-MakeMaker
 
   yum erase -y git
-
-  yum install -y perl-ExtUtils-MakeMaker
 
   cd /tmp
   curl -O https://git-core.googlecode.com/files/git-1.9.0.tar.gz
@@ -125,13 +111,19 @@ service go-server restart
 HERE
 
 Vagrant.configure('2') do |config|
-  centos_version = '6.5.3'
-  vagrant_centos_version = '20140116'
-  config.vm.box = "centos-#{centos_version}-#{vagrant_centos_version}"
-  config.vm.box_url = "https://github.com/2creatives/vagrant-centos/releases/download/v#{centos_version}/centos65-x86_64-#{vagrant_centos_version}.box"
+  config.vm.box = "centos_6.5_ami.box"
 
-  config.vm.provider :virtualbox do |vb|
-    vb.customize [ 'modifyvm', :id, '--memory', '2048' ]
+  config.vm.provider :aws do |aws, override|
+    aws.access_key_id = "some-key"
+    aws.secret_access_key = "some-other-key"
+    aws.keypair_name = "gocd"
+
+    aws.region = "us-east-1"
+    aws.region_config "us-east-1", :ami => "ami-8997afe0"
+    aws.instance_type = "m1.small"
+
+    override.ssh.username = "ubuntu"
+    override.ssh.private_key_path = "/Volumes/NG/gocd.pem"
   end
 
   config.cache.auto_detect = true
@@ -141,14 +133,7 @@ Vagrant.configure('2') do |config|
 
   NODES.each do |node|
     config.vm.define node[:vm_name] do |node_config|
-      node_config.vm.provider(:virtualbox) { |vb| vb.name = node[:vm_name].to_s }
-
       node_config.vm.hostname = node[:hostname]
-      node_config.vm.network :private_network, ip: node[:ip]
-      if node[:forward_port]
-        node_config.vm.network "forwarded_port", guest: node[:forward_port], host: node[:forward_port]
-      end
-
       node_config.vm.provision :shell, inline: node[:go_setup]
     end
   end
@@ -160,7 +145,7 @@ Vagrant.configure('2') do |config|
   end
 
   if INSTALL_DEV_TOOLS
-    config.vm.provision :shell, inline: UPGRADE_GIT 
+    config.vm.provision :shell, inline: UPGRADE_GIT
     config.vm.provision :shell, inline: INSTALL_CHEF
     config.vm.provision :chef_solo do |chef|
       chef.cookbooks_path = ['.', './cookbooks']
